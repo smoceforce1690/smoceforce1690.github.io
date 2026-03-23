@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Три Кота: Хоккей ELO (Negative Support)</title>
+    <title>Три Кота: Хоккей ELO с паролем</title>
     <link href="https://api.fontshare.com/v2/css?f[]=chillax@400,600,700&f[]=general-sans@400,500,600&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -25,20 +25,18 @@
         input { width: 100%; padding: 12px; border-radius: 12px; border: 2px solid var(--border); background: var(--bg); color: var(--text); margin-bottom: 10px; font-size: 16px; }
         .btn { width: 100%; padding: 14px; border-radius: 12px; border: none; background: var(--accent); color: white; font-weight: 700; cursor: pointer; transition: 0.2s; }
         .btn:hover { opacity: 0.9; transform: translateY(-1px); }
+        .btn-secondary { background: transparent; color: var(--accent); border: 1px solid var(--accent); margin-top: 10px; }
 
-        /* Dashboard */
         .elo-display { font-size: 3rem; font-weight: 800; color: var(--accent); text-align: center; margin: 10px 0; }
         .elo-negative { color: var(--lose) !important; }
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; text-align: center; }
         .stat-box { background: var(--bg); padding: 10px; border-radius: 12px; }
 
-        /* Characters */
         .char-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
         .char-card { padding: 10px; border: 2px solid var(--border); border-radius: 15px; text-align: center; cursor: pointer; transition: 0.2s; background: var(--card); }
         .char-card.selected { border-color: var(--accent); background: var(--accent); color: white; }
         .team-label { font-size: 12px; font-weight: 700; text-transform: uppercase; margin-bottom: 5px; opacity: 0.7; }
 
-        /* Score */
         .score-row { display: flex; align-items: center; justify-content: center; gap: 20px; margin: 20px 0; }
         .score-control { display: flex; align-items: center; gap: 10px; }
         .score-btn { width: 35px; height: 35px; border-radius: 50%; border: 1px solid var(--border); background: var(--card); color: var(--text); font-weight: bold; cursor: pointer; }
@@ -46,31 +44,36 @@
 
         .hidden { display: none; }
         .rank-item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid var(--border); }
-        .rank-item:last-child { border: none; }
         .rank-elo-neg { color: var(--lose); font-weight: 600; }
     </style>
 </head>
 <body>
 
 <div class="app">
-    <div id="view-reg" class="card">
-        <h1>🏒 Хоккей: Три Кота</h1>
-        <p>Создай уникальный никнейм</p>
-        <input type="text" id="reg-nick" placeholder="Никнейм">
-        <div id="reg-error" style="color: var(--lose); font-size: 14px; margin-bottom: 10px;"></div>
-        <button class="btn" onclick="register()">Зарегистрироваться</button>
+    <div id="view-auth" class="card">
+        <h1 id="auth-title">Вход в систему</h1>
+        <p id="auth-desc">Введите никнейм и пароль для доступа к ELO</p>
+        <input type="text" id="auth-nick" placeholder="Никнейм">
+        <input type="password" id="auth-pass" placeholder="Пароль">
+        <div id="auth-error" style="color: var(--lose); font-size: 14px; margin-bottom: 10px;"></div>
+        
+        <button class="btn" id="btn-login" onclick="handleAuth(true)">Войти</button>
+        <button class="btn btn-secondary" id="btn-toggle-reg" onclick="toggleAuthMode()">У меня нет аккаунта</button>
     </div>
 
     <div id="view-hours" class="card hidden">
         <h2>Твой опыт</h2>
-        <p>Сколько часов ты уже отыграл в хоккей?</p>
+        <p>Сколько часов ты уже отыграл в хоккей "Три Кота"?</p>
         <input type="number" id="reg-hours" placeholder="Часы" min="0">
-        <button class="btn" onclick="saveHours()">Рассчитать рейтинг</button>
+        <button class="btn" onclick="finishRegistration()">Завершить регистрацию</button>
     </div>
 
     <div id="view-main" class="hidden">
         <div class="card" style="margin-bottom: 20px;">
-            <h3 id="display-nick">Игрок</h3>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <h3 id="display-nick">Игрок</h3>
+                <button onclick="location.reload()" style="font-size: 12px; color: var(--muted); cursor: pointer; background: none; border: none;">Выйти</button>
+            </div>
             <div class="elo-display" id="display-elo">0</div>
             <div class="stats-grid">
                 <div class="stat-box"><div id="display-hours">0</div><small>Часов</small></div>
@@ -92,25 +95,11 @@
             </div>
 
             <div class="score-row">
-                <div>
-                    <small>Твой счёт</small>
-                    <div class="score-control">
-                        <button class="score-btn" onclick="adjScore('my', -1)">-</button>
-                        <div class="score-val" id="score-my">0</div>
-                        <button class="score-btn" onclick="adjScore('my', 1)">+</button>
-                    </div>
-                </div>
+                <div><small>Ты</small><div class="score-control"><button class="score-btn" onclick="adjScore('my', -1)">-</button><div class="score-val" id="score-my">0</div><button class="score-btn" onclick="adjScore('my', 1)">+</button></div></div>
                 <div style="font-weight: 800; font-size: 20px; margin-top: 20px;">:</div>
-                <div>
-                    <small>Враг</small>
-                    <div class="score-control">
-                        <button class="score-btn" onclick="adjScore('en', -1)">-</button>
-                        <div class="score-val" id="score-en">0</div>
-                        <button class="score-btn" onclick="adjScore('en', 1)">+</button>
-                    </div>
-                </div>
+                <div><small>Враг</small><div class="score-control"><button class="score-btn" onclick="adjScore('en', -1)">-</button><div class="score-val" id="score-en">0</div><button class="score-btn" onclick="adjScore('en', 1)">+</button></div></div>
             </div>
-            <button class="btn" id="btn-submit" onclick="submitMatch()">Обновить ELO</button>
+            <button class="btn" onclick="submitMatch()">Обновить ELO</button>
         </div>
 
         <div class="card" style="margin-top: 20px;">
@@ -121,30 +110,61 @@
 </div>
 
 <script>
-    let players = JSON.parse(localStorage.getItem('hockey_elo_v3') || '{}');
+    let players = JSON.parse(localStorage.getItem('hockey_elo_secure_v1') || '{}');
     let currentUser = null;
+    let isRegMode = false;
     let selectedChar = null;
     let myScore = 0;
     let enScore = 0;
 
-    function register() {
-        const nick = document.getElementById('reg-nick').value.trim();
-        const error = document.getElementById('reg-error');
-        if (nick.length < 2) { error.innerText = "Минимум 2 символа"; return; }
-        if (players[nick]) { error.innerText = "Этот ник уже занят!"; return; }
-        currentUser = nick;
-        document.getElementById('view-reg').classList.add('hidden');
-        document.getElementById('view-hours').classList.remove('hidden');
+    function toggleAuthMode() {
+        isRegMode = !isRegMode;
+        document.getElementById('auth-title').innerText = isRegMode ? "Регистрация" : "Вход в систему";
+        document.getElementById('auth-desc').innerText = isRegMode ? "Создайте аккаунт и установите пароль" : "Введите никнейм и пароль для доступа к ELO";
+        document.getElementById('btn-login').innerText = isRegMode ? "Создать аккаунт" : "Войти";
+        document.getElementById('btn-toggle-reg').innerText = isRegMode ? "У меня уже есть аккаунт" : "У меня нет аккаунта";
+        document.getElementById('auth-error').innerText = "";
     }
 
-    function saveHours() {
+    function handleAuth() {
+        const nick = document.getElementById('auth-nick').value.trim();
+        const pass = document.getElementById('auth-pass').value.trim();
+        const error = document.getElementById('auth-error');
+
+        if (nick.length < 2 || pass.length < 3) {
+            error.innerText = "Ник (мин. 2) или пароль (мин. 3) слишком короткие";
+            return;
+        }
+
+        if (isRegMode) {
+            if (players[nick]) {
+                error.innerText = "Этот ник уже занят!";
+                return;
+            }
+            currentUser = nick;
+            // Временно сохраняем пароль, пока не введут часы
+            players[currentUser] = { nick: nick, pass: pass, elo: 0, matches: 0, hours: 0 };
+            document.getElementById('view-auth').classList.add('hidden');
+            document.getElementById('view-hours').classList.remove('hidden');
+        } else {
+            if (!players[nick] || players[nick].pass !== pass) {
+                error.innerText = "Неверный ник или пароль";
+                return;
+            }
+            currentUser = nick;
+            initMain();
+        }
+    }
+
+    function finishRegistration() {
         const hours = document.getElementById('reg-hours').value || 0;
-        players[currentUser] = { nick: currentUser, hours: hours, elo: 0, matches: 0 };
+        players[currentUser].hours = hours;
         save();
         initMain();
     }
 
     function initMain() {
+        document.getElementById('view-auth').classList.add('hidden');
         document.getElementById('view-hours').classList.add('hidden');
         document.getElementById('view-main').classList.remove('hidden');
         updateUI();
@@ -167,60 +187,45 @@
     }
 
     function submitMatch() {
-        if (!selectedChar) { alert("Выбери своего персонажа!"); return; }
+        if (!selectedChar) { alert("Выбери персонажа!"); return; }
         if (!((myScore === 5 && enScore < 5) || (enScore === 5 && myScore < 5))) {
-            alert("Кто-то должен забить ровно 5 голов!"); return;
+            alert("Игра идет до 5 голов!"); return;
         }
 
         let eloChange = 0;
         if (myScore === 5) {
-            const wins = { 0: 50, 1: 40, 2: 30, 3: 20, 4: 10 };
-            eloChange = wins[enScore];
+            eloChange = { 0: 50, 1: 40, 2: 30, 3: 20, 4: 10 }[enScore];
         } else {
-            const losses = { 0: -50, 1: -40, 2: -30, 3: -20, 4: -10 };
-            eloChange = losses[myScore];
+            eloChange = { 0: -50, 1: -40, 2: -30, 3: -20, 4: -10 }[myScore];
         }
 
-        // Убрано ограничение Math.max(0), теперь ELO может быть меньше нуля
-        players[currentUser].elo = Math.min(100000000, players[currentUser].elo + eloChange);
+        players[currentUser].elo += eloChange;
         players[currentUser].matches++;
-        
-        myScore = 0; enScore = 0;
-        document.getElementById('score-my').innerText = 0;
-        document.getElementById('score-en').innerText = 0;
-        document.querySelectorAll('.char-card').forEach(c => c.classList.remove('selected'));
-        selectedChar = null;
-
         save();
         updateUI();
-        alert(`Результат сохранен! Изменение: ${eloChange > 0 ? '+' : ''}${eloChange} ELO`);
+        alert(`ELO обновлено: ${eloChange > 0 ? '+' : ''}${eloChange}`);
     }
 
     function updateUI() {
         const p = players[currentUser];
         const eloEl = document.getElementById('display-elo');
-        
         eloEl.innerText = p.elo.toLocaleString();
-        // Красим в красный, если рейтинг отрицательный
-        if (p.elo < 0) eloEl.classList.add('elo-negative');
-        else eloEl.classList.remove('elo-negative');
-
+        p.elo < 0 ? eloEl.classList.add('elo-negative') : eloEl.classList.remove('elo-negative');
         document.getElementById('display-nick').innerText = p.nick;
         document.getElementById('display-hours').innerText = p.hours;
         document.getElementById('display-matches').innerText = p.matches;
 
-        const lb = document.getElementById('leaderboard');
         const sorted = Object.values(players).sort((a,b) => b.elo - a.elo);
-        lb.innerHTML = sorted.map((player, index) => `
+        document.getElementById('leaderboard').innerHTML = sorted.map((pl, i) => `
             <div class="rank-item">
-                <span>${index + 1}. <strong>${player.nick}</strong></span>
-                <span class="${player.elo < 0 ? 'rank-elo-neg' : ''}">${player.elo.toLocaleString()} ELO</span>
+                <span>${i+1}. <strong>${pl.nick}</strong></span>
+                <span class="${pl.elo < 0 ? 'rank-elo-neg' : ''}">${pl.elo.toLocaleString()} ELO</span>
             </div>
         `).join('');
     }
 
     function save() {
-        localStorage.setItem('hockey_elo_v3', JSON.stringify(players));
+        localStorage.setItem('hockey_elo_secure_v1', JSON.stringify(players));
     }
 </script>
 </body>
