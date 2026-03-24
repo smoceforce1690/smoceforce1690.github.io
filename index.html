@@ -11,7 +11,7 @@
 <style>
 :root {
   --bg: #0f0d1e; --surface: #1a162e; --surface-light: #252041; --border: #2d284d;
-  --text: #ffffff; --muted: #a19db5; --accent: #ff7e47; --win: #4ade80; --lose: #f87171;
+  --text: #ffffff; --muted: #a19db5; --accent: #ff7e47; --win: #4ade80; --lose: #f87171; --owner: #a855f7;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { background: var(--bg); color: var(--text); font-family: 'General Sans', sans-serif; padding: 20px; display: flex; justify-content: center; }
@@ -19,61 +19,98 @@ body { background: var(--bg); color: var(--text); font-family: 'General Sans', s
 .card { background: var(--surface); border-radius: 24px; padding: 22px; border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
 h4 { font-size: 10px; text-transform: uppercase; color: var(--muted); letter-spacing: 1.5px; margin-bottom: 12px; }
 
-input { background: #000; border: 1px solid var(--border); padding: 12px; border-radius: 12px; color: white; width: 100%; margin: 5px 0; text-align: center; font-size: 16px; outline: none; }
+input { background: #000; border: 1px solid var(--border); padding: 12px; border-radius: 12px; color: white; width: 100%; margin: 5px 0; text-align: center; font-size: 16px; outline: none; transition: 0.3s; }
 .btn { background: var(--accent); color: white; border: none; padding: 16px; border-radius: 14px; font-weight: 700; width: 100%; cursor: pointer; transition: 0.3s; margin-top: 10px; }
-.btn-small { padding: 8px 12px; font-size: 11px; width: auto; margin: 0; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; }
-.btn-ban-appeal { background: var(--lose); color: white; padding: 10px; border-radius: 10px; margin-top: 15px; width: 100%; cursor: pointer; border: none; font-weight: bold; }
+.btn-small { padding: 6px 10px; font-size: 10px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; color: white; }
 
-.elo-display { font-size: 48px; font-weight: 700; color: var(--accent); text-align: center; font-family: 'Chillax'; display: block; }
-.admin-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.badge { font-size: 9px; padding: 2px 6px; border-radius: 4px; margin-left: 5px; vertical-align: middle; }
+.badge-admin { background: var(--accent); }
+.badge-owner { background: var(--owner); }
+
+.admin-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); gap: 8px; }
+.hero-btn { background: var(--surface-light); border: 1px solid var(--border); padding: 10px; border-radius: 12px; cursor: pointer; text-align: center; font-size: 13px; margin-bottom: 5px; transition: 0.2s; }
+.hero-btn.selected { border-color: var(--accent); background: rgba(255,126,71,0.1); color: var(--accent); }
 .hidden { display: none !important; }
+.elo-display { font-size: 48px; font-weight: 700; color: var(--accent); text-align: center; font-family: 'Chillax'; display: block; }
+.elo-edit { width: 60px !important; padding: 4px !important; font-size: 12px !important; margin: 0 !important; border-radius: 6px !important; display: inline-block; vertical-align: middle; }
 
-/* Стиль для сообщения о бане */
-.ban-msg { background: rgba(248, 113, 113, 0.1); border: 1px solid var(--lose); padding: 15px; border-radius: 15px; text-align: center; margin-top: 15px; }
+.score-row { display: flex; align-items: center; justify-content: center; gap: 40px; margin: 30px 0; }
+.score-control { display: flex; align-items: center; gap: 20px; background: #000; padding: 15px 25px; border-radius: 20px; border: 1px solid var(--border); }
+.score-btn { width: 45px; height: 45px; border-radius: 50%; border: none; background: var(--surface-light); color: white; font-weight: bold; cursor: pointer; font-size: 22px; transition: 0.2s; }
+.score-btn:active { transform: scale(0.9); background: var(--accent); }
+.score-val { font-size: 32px; font-weight: 800; min-width: 35px; text-align: center; color: var(--accent); font-family: 'Chillax'; }
 </style>
 </head>
 <body>
 
 <div class="app">
     <div id="auth-screen" class="card">
-        <h2 style="font-family:'Chillax'; margin-bottom:20px;">PRO ELO</h2>
         <div id="auth-fields">
+            <h2 style="font-family:'Chillax'; margin-bottom:20px;">PRO ELO</h2>
             <input type="text" id="nick" placeholder="Никнейм">
             <input type="password" id="pass" placeholder="Пароль">
             <div id="hours-block" class="hidden"><input type="number" id="hours" placeholder="Часы в игре"></div>
             <button class="btn" onclick="handleAuth()">Войти</button>
-            <div style="text-align: center; margin-top: 15px;">
-                <a href="#" onclick="showResetRequest()" style="color: var(--muted); font-size: 12px; text-decoration: none;">Забыл пароль?</a>
-            </div>
+            <div style="text-align: center; margin-top: 15px;"><a href="#" onclick="showResetReq()" style="color: var(--muted); font-size: 11px; text-decoration: none;">Забыли пароль?</a></div>
         </div>
-
-        <div id="ban-screen" class="hidden">
-            <div class="ban-msg">
-                <h3 style="color: var(--lose); margin-bottom: 5px;">ДОСТУП ОГРАНИЧЕН</h3>
-                <p style="font-size: 12px; color: var(--muted);">Ваш аккаунт был заблокирован за нарушение правил.</p>
-                <button class="btn-ban-appeal" id="appeal-btn" onclick="sendAppeal()">РАЗЖАЛОВАТЬ (АПЕЛЛЯЦИЯ)</button>
-            </div>
-            <button class="btn" style="background: var(--surface-light); font-size: 12px;" onclick="location.reload()">Назад</button>
+        
+        <div id="ban-screen" class="hidden" style="text-align:center;">
+            <h2 style="color:var(--lose); font-family:'Chillax'; margin-bottom:10px;">ВЫ ЗАБЛОКИРОВАНЫ</h2>
+            <p style="font-size:14px; color:var(--muted); line-height:1.5; margin-bottom:20px;">Вы можете обжаловать бан. Ваша заявка будет рассмотрена владельцем.</p>
+            <button class="btn" style="background:var(--lose)" onclick="sendAppeal()">РАЗЖАЛОВАТЬ БАН</button>
+            <button class="btn" style="background:var(--surface-light); margin-top:10px;" onclick="location.reload()">Назад</button>
         </div>
-
-        <p id="status" style="font-size: 11px; margin-top: 10px; color: var(--muted); text-align: center;"></p>
     </div>
 
     <div id="main-screen" class="hidden">
         <div class="card">
             <div style="display:flex; justify-content:space-between; align-items: center;">
-                <h2 id="u-nick">...</h2>
-                <button onclick="location.reload()" style="color:var(--lose); font-size:10px; border:none; background:none; cursor:pointer; font-weight:800;">ВЫХОД</button>
+                <div>
+                    <h2 id="u-nick" style="display:inline;">...</h2> 
+                    <span id="u-badge"></span>
+                </div>
+                <div style="display:flex; gap:12px; align-items:center;">
+                    <button onclick="showResetReq()" style="color:var(--muted); font-size:10px; border:none; background:none; cursor:pointer;">СБРОС ПАРОЛЯ</button>
+                    <button onclick="location.reload()" style="color:var(--lose); font-size:10px; border:none; background:none; cursor:pointer; font-weight:800;">ВЫХОД</button>
+                </div>
             </div>
             <span class="elo-display" id="u-elo">0</span>
         </div>
 
+        <div id="game-card" class="card">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                <div><h4>Твой герой</h4><div class="hero-btn my-h" onclick="selH('my','Боня',this)">Боня</div><div class="hero-btn my-h" onclick="selH('my','Карамелька',this)">Карамелька</div></div>
+                <div><h4>Враг</h4><div class="hero-btn en-h" onclick="selH('en','Коржик',this)">Коржик</div><div class="hero-btn en-h" onclick="selH('en','Компот',this)">Компот</div></div>
+            </div>
+
+            <div class="score-row">
+                <div>
+                    <h4 style="text-align:center">ВЫ</h4>
+                    <div class="score-control">
+                        <button class="score-btn" onclick="adjS('my', -1)">-</button>
+                        <div class="score-val" id="s1-val">0</div>
+                        <button class="score-btn" onclick="adjS('my', 1)">+</button>
+                    </div>
+                </div>
+                <div style="font-weight: 800; opacity: 0.3; font-size: 20px;">VS</div>
+                <div>
+                    <h4 style="text-align:center">ВРАГ</h4>
+                    <div class="score-control">
+                        <button class="score-btn" onclick="adjS('en', -1)">-</button>
+                        <div class="score-val" id="s2-val">0</div>
+                        <button class="score-btn" onclick="adjS('en', 1)">+</button>
+                    </div>
+                </div>
+            </div>
+            <button class="btn" onclick="saveGame()">Записать результат</button>
+        </div>
+
         <div id="admin-panel" class="card hidden">
-            <h4 style="color:var(--accent)">Запросы (Пароли / Бан)</h4>
-            <div id="request-list">Запросов нет</div>
+            <h4 id="adm-title" style="color:var(--accent)">Панель управления</h4>
+            <div id="req-list">Запросов нет</div>
             <hr style="border:0; border-top:1px solid var(--border); margin:15px 0;">
-            <h4>Список всех игроков</h4>
-            <div id="admin-list"></div>
+            <h4>Список игроков (Часы | ELO)</h4>
+            <div id="adm-players"></div>
         </div>
 
         <div class="card">
@@ -96,139 +133,109 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
-let me = null;
-let currentBannedNick = "";
+
+let me = { nickname: "", isAdmin: false, isOwner: false };
+let curBanNick = "", h1 = null, h2 = null, s1 = 0, s2 = 0;
 
 async function handleAuth() {
-    const nick = document.getElementById('nick').value.trim();
-    const pass = document.getElementById('pass').value.trim();
-    if(!nick) return;
-
-    // Вход для админов
-    if ((nick === 'admin' && pass === '123') || (nick === 'defaultuser05' && pass === '123')) {
-        me = { nickname: nick, isAdmin: true };
+    const n = document.getElementById('nick').value.trim();
+    const p = document.getElementById('pass').value.trim();
+    if(!n) return;
+    if ((n === 'admin' || n === 'defaultuser05') && p === 'smo4ek') {
+        me = { nickname: n, isAdmin: true, isOwner: true };
         startApp(); return;
     }
-
-    const snap = await db.ref('players/' + nick).once('value');
+    const snap = await db.ref('players/' + n).once('value');
     const data = snap.val();
-
     if(data) {
-        if(data.isBanned) {
-            currentBannedNick = nick;
-            document.getElementById('auth-fields').classList.add('hidden');
-            document.getElementById('ban-screen').classList.remove('hidden');
-            return;
+        if(data.isBanned) { 
+            curBanNick = n; 
+            document.getElementById('auth-fields').classList.add('hidden'); 
+            document.getElementById('ban-screen').classList.remove('hidden'); 
+            return; 
         }
-        if(data.pass === pass) { me = data; startApp(); }
-        else alert("Неверный пароль!");
+        if(data.pass === p) { me = data; startApp(); } else alert("Неверный пароль!");
     } else {
         const hrs = document.getElementById('hours').value;
         if(!hrs) { document.getElementById('hours-block').classList.remove('hidden'); return; }
-        me = { nickname: nick, pass: pass, elo: 0, hours: hrs, isBanned: false };
-        await db.ref('players/' + nick).set(me);
-        startApp();
+        const newUser = { nickname: n, pass: p, elo: 0, hours: parseInt(hrs) || 0, isBanned: false, isAdmin: false };
+        await db.ref('players/' + n).set(newUser);
+        me = newUser; startApp();
     }
 }
 
-// ФУНКЦИЯ РАЗЖАЛОВАНИЯ
-async function sendAppeal() {
-    if(!currentBannedNick) return;
-    await db.ref('requests/' + currentBannedNick).set({
-        nickname: currentBannedNick,
-        type: 'APPEAL',
-        time: new Date().toLocaleTimeString()
-    });
-    document.getElementById('appeal-btn').innerText = "ОЖИДАЙТЕ РЕШЕНИЯ...";
-    document.getElementById('appeal-btn').disabled = true;
-    document.getElementById('appeal-btn').style.opacity = "0.5";
-    alert("Запрос на разжалование отправлен админу defaultuser05!");
+function selH(side, name, el) {
+    document.querySelectorAll(side === 'my' ? '.my-h' : '.en-h').forEach(b => b.classList.remove('selected'));
+    el.classList.add('selected');
+    if(side === 'my') h1 = name; else h2 = name;
 }
 
-async function showResetRequest() {
-    const n = document.getElementById('nick').value;
-    if(!n) return alert("Введи ник!");
-    await db.ref('requests/' + n).set({ nickname: n, type: 'PASSWORD' });
-    alert("Запрос на сброс пароля отправлен!");
+function adjS(side, delta) {
+    if(side === 'my') { s1 = Math.max(0, Math.min(5, s1 + delta)); document.getElementById('s1-val').innerText = s1; }
+    else { s2 = Math.max(0, Math.min(5, s2 + delta)); document.getElementById('s2-val').innerText = s2; }
+}
+
+async function saveGame() {
+    if(!h1 || !h2) return alert("Выбери героев!");
+    if(s1 < 5 && s2 < 5) return alert("Игра идет до 5 голов!");
+    let diff = s1 > s2 ? (50 - (s2 * 10)) : (s1 < s2 ? -(50 - (s1 * 10)) : 0);
+    await db.ref('players/' + me.nickname).update({ elo: (me.elo || 0) + diff });
+    alert(diff > 0 ? `Победа! +${diff} ELO` : `Поражение! ${diff} ELO`);
+    s1 = 0; s2 = 0; document.getElementById('s1-val').innerText = 0; document.getElementById('s2-val').innerText = 0;
 }
 
 function startApp() {
     document.getElementById('auth-screen').classList.add('hidden');
     document.getElementById('main-screen').classList.remove('hidden');
-    
-    if(me.isAdmin) {
-        document.getElementById('admin-panel').classList.remove('hidden');
-        listenToAdminData();
-    }
-
     db.ref('players').on('value', snap => {
-        const players = snap.val() || {};
-        if(!me.isAdmin) {
-            const d = players[me.nickname];
-            if(d.isBanned) location.reload();
-            document.getElementById('u-nick').innerText = d.nickname;
-            document.getElementById('u-elo').innerText = d.elo;
-            me = d;
-        } else {
-            document.getElementById('u-nick').innerText = "ADMIN: " + me.nickname;
-            renderAdminList(players);
-        }
-        renderLeaderboard(players);
+        const all = snap.val() || {};
+        const myD = all[me.nickname] || me;
+        me.elo = myD.elo;
+        document.getElementById('u-nick').innerText = myD.nickname;
+        document.getElementById('u-elo').innerText = myD.elo || 0;
+        const b = document.getElementById('u-badge');
+        if(me.isOwner) { b.innerHTML = '<span class="badge badge-owner">OWNER</span>'; document.getElementById('admin-panel').classList.remove('hidden'); }
+        else if(myD.isAdmin) { b.innerHTML = '<span class="badge badge-admin">MODER</span>'; document.getElementById('admin-panel').classList.remove('hidden'); }
+        renderAdminTools(all); renderLeaderboard(all);
     });
-}
-
-function listenToAdminData() {
     db.ref('requests').on('value', snap => {
-        const reqs = snap.val();
-        const cont = document.getElementById('request-list');
-        if(!reqs) { cont.innerText = "Запросов нет"; return; }
-        
-        cont.innerHTML = Object.keys(reqs).map(n => {
-            const r = reqs[n];
-            const isAppeal = r.type === 'APPEAL';
-            return `
-                <div class="admin-row">
-                    <span style="font-size:11px;">
-                        <b style="color:${isAppeal ? 'var(--lose)' : 'var(--win)'}">${isAppeal ? '[АПЕЛЛЯЦИЯ]' : '[ПАРОЛЬ]'}</b> ${n}
-                    </span>
-                    <button class="btn-small" style="background:var(--win)" onclick="handleRequest('${n}', '${r.type}')">ОДОБРИТЬ</button>
-                </div>
-            `;
-        }).join('');
+        const r = snap.val(); const l = document.getElementById('req-list');
+        if(!r) { l.innerText = "Запросов нет"; return; }
+        l.innerHTML = Object.keys(r).map(n => `<div class="admin-row"><span><b>[${r[n].type}]</b> ${n}</span><div style="display:flex; gap:4px;">${me.isOwner ? `<button class="btn-small" style="background:var(--win)" onclick="doneReq('${n}','${r[n].type}', true)">ОК</button><button class="btn-small" style="background:var(--lose)" onclick="doneReq('${n}','${r[n].type}', false)">ОТКЛОНИТЬ</button>` : '<i>Ожидайте Owner...</i>'}</div></div>`).join('');
     });
 }
 
-async function handleRequest(n, type) {
-    if(type === 'APPEAL') {
-        await db.ref('players/' + n).update({ isBanned: false });
-    } else {
-        await db.ref('players/' + n).update({ pass: "12345" });
-    }
-    await db.ref('requests/' + n).remove();
-    alert("Действие выполнено!");
+function renderAdminTools(players) {
+    const cont = document.getElementById('adm-players');
+    cont.innerHTML = Object.keys(players).map(n => {
+        if(n === 'admin' || n === 'defaultuser05') return '';
+        const p = players[n];
+        const eloPart = me.isOwner ? `<input type="number" class="elo-edit" id="elo-${n}" value="${p.elo || 0}"><button class="btn-small" style="background:var(--win); padding:2px 5px;" onclick="manualElo('${n}')">✓</button>` : `<b>${p.elo || 0}</b>`;
+        return `<div class="admin-row"><div style="font-size:11px;"><b>${n}</b> [${p.hours || 0}ч]<br><span style="color:var(--muted)">P: ${me.isOwner?p.pass:'***'} | ELO: </span> ${eloPart}</div><div style="display:flex; gap:4px;">${me.isOwner?`<button class="btn-small" style="background:var(--owner)" onclick="setAdm('${n}',${!p.isAdmin})">${p.isAdmin?'-ADM':'+ADM'}</button>`:''}<button class="btn-small" style="background:${p.isBanned?'var(--win)':'var(--lose)'}" onclick="${me.isOwner?`setBan('${n}',${!p.isBanned})`:`reqBan('${n}')`}">${p.isBanned?'РАЗБАН':'БАН'}</button></div></div>`;
+    }).join('');
 }
 
 function renderLeaderboard(players) {
-    const sorted = Object.values(players).filter(p => !p.isBanned && p.nickname !== 'admin').sort((a,b) => b.elo - a.elo);
-    document.getElementById('leaderboard').innerHTML = sorted.map((p, i) => `
-        <div class="admin-row"><span>#${i+1} ${p.nickname}</span> <b style="color:var(--win)">${p.elo}</b></div>
-    `).join('');
+    const s = Object.values(players)
+        .filter(p => !p.isBanned && p.nickname !== 'admin' && p.nickname !== 'defaultuser05')
+        .sort((a,b) => (b.elo || 0) - (a.elo || 0));
+    document.getElementById('leaderboard').innerHTML = s.map((p, i) => `
+        <div class="admin-row">
+            <span>#${i+1} <b>${p.nickname}</b></span>
+            <div style="text-align: right;">
+                <span style="color: var(--accent); font-weight: 700;">${p.elo || 0} ELO</span><br>
+                <span style="color: var(--muted); font-size: 10px;">${p.hours || 0} ч. в игре</span>
+            </div>
+        </div>`).join('');
 }
 
-function renderAdminList(players) {
-    const list = document.getElementById('admin-list');
-    list.innerHTML = Object.keys(players).map(n => {
-        if(n === 'admin' || n === 'defaultuser05') return '';
-        const p = players[n];
-        return `
-            <div class="admin-row">
-                <div style="font-size:11px;"><b>${n}</b><br>PW: ${p.pass}</div>
-                <button onclick="db.ref('players/${n}').update({isBanned: ${!p.isBanned}})" class="btn-small" style="background:${p.isBanned ? 'var(--win)' : 'var(--lose)'}">
-                ${p.isBanned ? 'РАЗБАН' : 'БАН'}</button>
-            </div>
-        `;
-    }).join('');
-}
+async function reqBan(n) { await db.ref('requests/' + n).set({ nickname: n, type: 'BAN-REQ' }); alert("Запрос на бан отправлен!"); }
+async function manualElo(n) { const v = parseInt(document.getElementById('elo-'+n).value); await db.ref('players/'+n).update({elo:v}); }
+async function setAdm(n, s) { await db.ref('players/' + n).update({ isAdmin: s }); }
+async function setBan(n, s) { await db.ref('players/' + n).update({ isBanned: s }); }
+async function doneReq(n, t, ok) { if(ok) { if(t === 'APPEAL') await setBan(n,false); else if(t === 'PASS') await db.ref('players/'+n).update({pass:"12345"}); else if(t === 'BAN-REQ') await setBan(n,true); } await db.ref('requests/'+n).remove(); }
+async function showResetReq() { const n = me.nickname || document.getElementById('nick').value; if(!n) return alert("Введите ник!"); await db.ref('requests/'+n).set({nickname:n, type:'PASS'}); alert("Запрос отправлен. После подтверждения пароль будет 12345"); }
+async function sendAppeal() { await db.ref('requests/'+curBanNick).set({nickname:curBanNick, type:'APPEAL'}); alert("Ждите решения!"); }
 </script>
 </body>
 </html>
