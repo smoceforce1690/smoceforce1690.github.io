@@ -16,22 +16,21 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { background: var(--bg); color: var(--text); font-family: 'General Sans', sans-serif; padding: 20px; display: flex; justify-content: center; }
 .app { width: 100%; max-width: 550px; display: flex; flex-direction: column; gap: 15px; }
-.card { background: var(--surface); border-radius: 24px; padding: 24px; border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.5); position: relative; }
+.card { background: var(--surface); border-radius: 24px; padding: 22px; border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
 h4 { font-size: 10px; text-transform: uppercase; color: var(--muted); letter-spacing: 1.5px; margin-bottom: 12px; }
 
-input { background: #000; border: 1px solid var(--border); padding: 14px; border-radius: 12px; color: white; width: 100%; margin: 8px 0; text-align: center; font-size: 18px; outline: none; transition: 0.3s; }
-input:focus { border-color: var(--accent); }
+input { background: #000; border: 1px solid var(--border); padding: 12px; border-radius: 12px; color: white; width: 100%; margin: 5px 0; text-align: center; font-size: 16px; outline: none; }
 .btn { background: var(--accent); color: white; border: none; padding: 16px; border-radius: 14px; font-weight: 700; width: 100%; cursor: pointer; transition: 0.3s; margin-top: 10px; }
-.btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
 .btn-small { padding: 8px 12px; font-size: 11px; width: auto; margin: 0; border-radius: 8px; }
 
-.hidden { display: none !important; }
-.admin-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); }
-.request-item { background: rgba(255, 126, 71, 0.1); border: 1px dashed var(--accent); padding: 10px; border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+.elo-display { font-size: 48px; font-weight: 700; color: var(--accent); text-align: center; font-family: 'Chillax'; display: block; }
+.hero-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+.hero-btn { background: var(--surface-light); border: 1px solid var(--border); padding: 10px; border-radius: 12px; cursor: pointer; text-align: center; font-size: 13px; transition: 0.2s; }
+.hero-btn.selected { border-color: var(--accent); background: rgba(255,126,71,0.1); }
 
-/* Стили для смены пароля */
-.settings-link { color: var(--muted); font-size: 11px; cursor: pointer; text-decoration: underline; margin-top: 10px; display: inline-block; }
-#change-pass-box { margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border); }
+.admin-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.hidden { display: none !important; }
+.settings-link { color: var(--muted); font-size: 11px; cursor: pointer; text-decoration: underline; display: block; text-align: center; margin-top: 10px; }
 </style>
 </head>
 <body>
@@ -42,37 +41,52 @@ input:focus { border-color: var(--accent); }
         <input type="text" id="nick" placeholder="Никнейм">
         <input type="password" id="pass" placeholder="Пароль">
         <div id="hours-block" class="hidden"><input type="number" id="hours" placeholder="Часы в игре"></div>
-        
         <button class="btn" onclick="handleAuth()">Войти</button>
-        
         <div style="text-align: center; margin-top: 15px;">
             <a href="#" onclick="showResetRequest()" style="color: var(--muted); font-size: 12px; text-decoration: none;">Забыл пароль?</a>
         </div>
-        <p id="status" style="font-size: 11px; margin-top: 15px; color: var(--muted); text-align: center;"></p>
+        <p id="status" style="font-size: 11px; margin-top: 10px; color: var(--muted); text-align: center;"></p>
     </div>
 
     <div id="main-screen" class="hidden">
         <div class="card">
             <div style="display:flex; justify-content:space-between; align-items: center;">
                 <h2 id="u-nick">...</h2>
-                <button onclick="location.reload()" style="color:var(--lose); font-size:10px; border:none; background:none; cursor:pointer; font-weight: 800;">ВЫХОД</button>
+                <button onclick="location.reload()" style="color:var(--lose); font-size:10px; border:none; background:none; cursor:pointer; font-weight:800;">ВЫХОД</button>
             </div>
-            <h1 id="u-elo" style="text-align:center; font-size:48px; color:var(--accent); font-family:'Chillax'">0</h1>
-            
-            <div style="text-align: center;" id="player-settings">
-                <span class="settings-link" onclick="togglePassBox()">Изменить пароль для защиты</span>
-                <div id="change-pass-box" class="hidden">
-                    <input type="password" id="new-pass-val" placeholder="Новый пароль" style="font-size: 14px; padding: 10px;">
-                    <button class="btn btn-small" onclick="selfChangePass()">Сохранить</button>
-                </div>
+            <span class="elo-display" id="u-elo">0</span>
+            <span class="settings-link" onclick="document.getElementById('ch-pass-box').classList.toggle('hidden')">Защитить аккаунт (смена пароля)</span>
+            <div id="ch-pass-box" class="hidden" style="margin-top:10px;">
+                <input type="password" id="new-p" placeholder="Новый паро heartль" style="font-size:13px;">
+                <button class="btn btn-small" onclick="changeMyPass()">ОК</button>
             </div>
         </div>
 
+        <div id="game-card" class="card">
+            <div class="hero-grid">
+                <div>
+                    <h4>Твой герой</h4>
+                    <div class="hero-btn my-h" onclick="selH('my','Боня',this)">Боня</div>
+                    <div class="hero-btn my-h" onclick="selH('my','Карамелька',this)" style="margin-top:5px;">Карамелька</div>
+                </div>
+                <div>
+                    <h4>Враг</h4>
+                    <div class="hero-btn en-h" onclick="selH('en','Коржик',this)">Коржик</div>
+                    <div class="hero-btn en-h" onclick="selH('en','Компот',this)" style="margin-top:5px;">Компот</div>
+                </div>
+            </div>
+            <div style="display:flex; gap:10px;">
+                <input type="number" id="s1" placeholder="Твой счёт">
+                <input type="number" id="s2" placeholder="Их счёт">
+            </div>
+            <button class="btn" onclick="saveGame()">Сохранить результат</button>
+        </div>
+
         <div id="admin-panel" class="card hidden">
-            <h4 style="color:var(--accent)">Запросы на сброс</h4>
+            <h4 style="color:var(--accent)">Запросы на сброс пароля</h4>
             <div id="reset-list">Нет запросов</div>
-            <hr style="border: 0; border-top: 1px solid var(--border); margin: 20px 0;">
-            <h4>База игроков</h4>
+            <hr style="border:0; border-top:1px solid var(--border); margin:15px 0;">
+            <h4>Игроки (Пароли и Бан)</h4>
             <div id="admin-list"></div>
         </div>
 
@@ -97,66 +111,46 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 let me = null;
+let h1 = null, h2 = null;
 
 async function handleAuth() {
     const nick = document.getElementById('nick').value.trim();
     const pass = document.getElementById('pass').value.trim();
-    const status = document.getElementById('status');
-    
-    if(!nick || !pass) return;
+    if(!nick) return;
 
-    // Админы: admin и defaultuser05
     if ((nick === 'admin' && pass === '123') || (nick === 'defaultuser05' && pass === '123')) {
         me = { nickname: nick, isAdmin: true };
-        startApp();
-        return;
+        startApp(); return;
     }
 
     const snap = await db.ref('players/' + nick).once('value');
     const data = snap.val();
 
     if(data) {
-        if(data.isBanned) { status.innerText = "⛔ Вы забанены!"; return; }
+        if(data.isBanned) return alert("БАН!");
         if(data.pass === pass) { me = data; startApp(); }
-        else status.innerText = "❌ Неверный пароль!";
+        else alert("Неверный пароль!");
     } else {
-        const h = document.getElementById('hours').value;
-        if(!h) { document.getElementById('hours-block').classList.remove('hidden'); return; }
-        me = { nickname: nick, pass: pass, elo: 0, hours: h, isBanned: false };
+        const hrs = document.getElementById('hours').value;
+        if(!hrs) { document.getElementById('hours-block').classList.remove('hidden'); return; }
+        me = { nickname: nick, pass: pass, elo: 0, hours: hrs, isBanned: false };
         await db.ref('players/' + nick).set(me);
         startApp();
     }
 }
 
-function togglePassBox() {
-    document.getElementById('change-pass-box').classList.toggle('hidden');
-}
-
-async function selfChangePass() {
-    const newPass = document.getElementById('new-pass-val').value.trim();
-    if(newPass.length < 3) return alert("Пароль слишком короткий!");
-    
-    await db.ref('players/' + me.nickname).update({ pass: newPass });
-    alert("Пароль успешно изменен! Запомните его.");
-    togglePassBox();
-}
-
-function showResetRequest() {
-    const nick = document.getElementById('nick').value.trim();
-    if(!nick) return alert("Сначала введи свой ник!");
-    
-    db.ref('reset_requests/' + nick).set({ nickname: nick, time: new Date().toLocaleTimeString() });
-    alert("Запрос отправлен админу defaultuser05!");
+function selH(side, name, el) {
+    document.querySelectorAll(side === 'my' ? '.my-h' : '.en-h').forEach(b => b.classList.remove('selected'));
+    el.classList.add('selected');
+    if(side === 'my') h1 = name; else h2 = name;
 }
 
 function startApp() {
     document.getElementById('auth-screen').classList.add('hidden');
     document.getElementById('main-screen').classList.remove('hidden');
-    
     if(me.isAdmin) {
         document.getElementById('admin-panel').classList.remove('hidden');
-        document.getElementById('player-settings').classList.add('hidden');
-        listenToRequests();
+        document.getElementById('game-card').classList.add('hidden');
     }
 
     db.ref('players').on('value', snap => {
@@ -173,35 +167,52 @@ function startApp() {
         }
         renderLeaderboard(players);
     });
+
+    if(me.isAdmin) {
+        db.ref('reset_requests').on('value', snap => {
+            const reqs = snap.val();
+            const cont = document.getElementById('reset-list');
+            if(!reqs) { cont.innerText = "Запросов нет"; return; }
+            cont.innerHTML = Object.keys(reqs).map(n => `
+                <div class="admin-row"><span>${n}</span> <button class="btn btn-small" onclick="approveReset('${n}')">СБРОС</button></div>
+            `).join('');
+        });
+    }
 }
 
-function listenToRequests() {
-    db.ref('reset_requests').on('value', snap => {
-        const reqs = snap.val();
-        const cont = document.getElementById('reset-list');
-        if(!reqs) { cont.innerText = "Нет запросов"; return; }
-        cont.innerHTML = Object.keys(reqs).map(n => `
-            <div class="request-item">
-                <span><b>${n}</b> забыл пароль</span>
-                <button class="btn btn-small" style="background:var(--win)" onclick="approveReset('${n}')">СБРОС (12345)</button>
-            </div>
-        `).join('');
-    });
+async function saveGame() {
+    const s1 = parseInt(document.getElementById('s1').value);
+    const s2 = parseInt(document.getElementById('s2').value);
+    if(!h1 || !h2 || isNaN(s1)) return alert("Выбери героев и счёт!");
+    
+    let diff = (s1 > s2) ? 25 : -15;
+    await db.ref('players/' + me.nickname).update({ elo: (me.elo || 0) + diff });
+    alert(s1 > s2 ? "Победа! +25" : "Поражение! -15");
 }
 
-async function approveReset(nick) {
-    await db.ref('players/' + nick).update({ pass: "12345" });
-    await db.ref('reset_requests/' + nick).remove();
-    alert("Готово! Новый пароль игрока: 12345");
+async function changeMyPass() {
+    const np = document.getElementById('new-p').value;
+    if(np.length < 3) return;
+    await db.ref('players/' + me.nickname).update({ pass: np });
+    alert("Пароль изменён!");
+}
+
+function showResetRequest() {
+    const n = document.getElementById('nick').value;
+    if(!n) return alert("Введи ник!");
+    db.ref('reset_requests/' + n).set({ nickname: n });
+    alert("Запрос отправлен!");
+}
+
+async function approveReset(n) {
+    await db.ref('players/' + n).update({ pass: "12345" });
+    await db.ref('reset_requests/' + n).remove();
 }
 
 function renderLeaderboard(players) {
     const sorted = Object.values(players).filter(p => !p.isBanned && p.nickname !== 'admin').sort((a,b) => b.elo - a.elo);
     document.getElementById('leaderboard').innerHTML = sorted.map((p, i) => `
-        <div class="admin-row">
-            <span>#${i+1} ${p.nickname}</span>
-            <span style="color:var(--win); font-weight:bold;">${p.elo}</span>
-        </div>
+        <div class="admin-row"><span>#${i+1} ${p.nickname}</span> <b style="color:var(--win)">${p.elo}</b></div>
     `).join('');
 }
 
@@ -212,15 +223,9 @@ function renderAdmin(players) {
         const p = players[n];
         return `
             <div class="admin-row">
-                <div style="font-size:12px;">
-                    <b>${n}</b><br>
-                    <span style="color:var(--muted)">PW: ${p.pass}</span>
-                </div>
-                <div style="display:flex; gap:5px;">
-                    <button onclick="db.ref('players/${n}').update({isBanned: ${!p.isBanned}})" class="btn btn-small" 
-                    style="background:${p.isBanned ? 'var(--win)' : 'var(--lose)'}">
-                    ${p.isBanned ? 'РАЗБАН' : 'БАН'}</button>
-                </div>
+                <div style="font-size:11px;"><b>${n}</b><br>PW: ${p.pass} | ELO: ${p.elo}</div>
+                <button onclick="db.ref('players/${n}').update({isBanned: ${!p.isBanned}})" class="btn btn-small" style="background:${p.isBanned ? 'var(--win)' : 'var(--lose)'}">
+                ${p.isBanned ? 'РАЗБАН' : 'БАН'}</button>
             </div>
         `;
     }).join('');
